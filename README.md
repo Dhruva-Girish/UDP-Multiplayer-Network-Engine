@@ -26,6 +26,7 @@ python server.py
 ### 2 Start clients
 
 python client.py
+
 python client.py
 
 ## Controls
