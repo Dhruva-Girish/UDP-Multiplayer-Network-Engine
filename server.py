@@ -3,7 +3,7 @@ import json
 import hmac
 import hashlib
 
-HOST = "127.0.0.1"
+HOST = "0.0.0.0"
 PORT = 9999
 
 SECRET_KEY = b"network_secret_key"
@@ -24,7 +24,7 @@ colors = [
 
 print("Secure Server started")
 
-# ---------- VERIFY FUNCTION ----------
+# VERIFY FUNCTION
 def verify_packet(packet):
 
     payload = packet["data"]
@@ -50,7 +50,7 @@ while True:
     except:
         continue
 
-    # ---------- VERIFY SIGNATURE ----------
+    # VERIFY SIGNATURE
     if not verify_packet(packet):
         print("Tampered packet rejected")
         continue
