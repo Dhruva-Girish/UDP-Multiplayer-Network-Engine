@@ -5,7 +5,7 @@ import time
 import hmac
 import hashlib
 
-SERVER = "10.1.3.53"
+SERVER = "10.1.3.53" #server's IP address
 PORT = 9999
 
 SECRET_KEY = b"network_secret_key"
