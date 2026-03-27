@@ -122,9 +122,11 @@ Server FPS: 600
 ```
 project/
 │
-├── Secure_server.py    # UDP game server
+├── README.md     
 ├── Secure_client.py    # Multiplayer game client
-└── README.md
+├── Secure_server.py    # UDP game server
+├── UDP_Muliplayer_Game_Report.pdf
+└── requirements.txt
 ```
 
 Server handles:
