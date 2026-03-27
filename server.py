@@ -24,7 +24,7 @@ colors = [
 
 print("Secure Server started")
 
-# VERIFY FUNCTION
+
 def verify_packet(packet):
 
     payload = packet["data"]
@@ -50,15 +50,10 @@ while True:
     except:
         continue
 
-    # VERIFY SIGNATURE
-    if not verify_packet(packet):
-        print("Tampered packet rejected")
-        continue
-
-    msg = packet["data"]
-
-    # join
-    if msg["type"] == "join":
+    # ----------------------------
+    # HANDLE JOIN PACKET (no HMAC)
+    # ----------------------------
+    if "type" in packet and packet["type"] == "join":
 
         player_counter += 1
         pid = str(player_counter)
@@ -76,9 +71,22 @@ while True:
         }).encode(), addr)
 
         print("Player joined:", pid)
+        continue
+
+    # ----------------------------
+    # VERIFY HMAC PACKETS
+    # ----------------------------
+    if "data" not in packet:
+        continue
+
+    if not verify_packet(packet):
+        print("Rejected tampered packet")
+        continue
+
+    msg = packet["data"]
 
     # movement
-    elif msg["type"] == "move":
+    if msg["type"] == "move":
 
         pid = str(msg["player_id"])
 
@@ -96,7 +104,9 @@ while True:
             "time":msg["time"]
         }).encode(), addr)
 
-    # broadcast
+    # ----------------------------
+    # BROADCAST GAME STATE
+    # ----------------------------
     state = {
         "type":"state",
         "players":players
