@@ -5,17 +5,23 @@ import time
 import hmac
 import hashlib
 
-SERVER = "10.1.3.53" #server's IP address
+SERVER = "10.1.2.216"
 PORT = 9999
 
 SECRET_KEY = b"network_secret_key"
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-# HMAC FUNCTION
+
 def sign_message(payload):
+
     msg = json.dumps(payload)
-    signature = hmac.new(SECRET_KEY, msg.encode(), hashlib.sha256).hexdigest()
+
+    signature = hmac.new(
+        SECRET_KEY,
+        msg.encode(),
+        hashlib.sha256
+    ).hexdigest()
 
     packet = {
         "data": payload,
@@ -25,13 +31,24 @@ def sign_message(payload):
     return json.dumps(packet).encode()
 
 
-# JOIN
-sock.sendto(sign_message({"type":"join"}),(SERVER,PORT))
+# -----------------------
+# SEND JOIN (NOT SIGNED)
+# -----------------------
+
+sock.sendto(json.dumps({"type":"join"}).encode(), (SERVER, PORT))
 
 data,_ = sock.recvfrom(1024)
+
 msg = json.loads(data.decode())
 
 player_id = msg["player_id"]
+
+print("Connected as player", player_id)
+
+
+# -----------------------
+# START GAME WINDOW
+# -----------------------
 
 pygame.init()
 
@@ -46,6 +63,7 @@ players = {}
 x = 300
 y = 300
 latency = 0
+
 
 while True:
 
@@ -63,7 +81,11 @@ while True:
     if keys[pygame.K_a]: x -= 5
     if keys[pygame.K_d]: x += 5
 
-    # SECURE MOVE
+
+    # -----------------------
+    # SEND MOVE (SIGNED)
+    # -----------------------
+
     sock.sendto(sign_message({
         "type":"move",
         "player_id":player_id,
@@ -71,17 +93,25 @@ while True:
         "y":y
     }),(SERVER,PORT))
 
-    # SECURE PING
+
+    # -----------------------
+    # SEND PING (SIGNED)
+    # -----------------------
+
     sock.sendto(sign_message({
         "type":"ping",
         "time":time.time()
     }),(SERVER,PORT))
 
+
     sock.setblocking(False)
 
     try:
+
         while True:
+
             data,_ = sock.recvfrom(1024)
+
             msg = json.loads(data.decode())
 
             if msg["type"] == "state":
@@ -92,6 +122,11 @@ while True:
 
     except:
         pass
+
+
+    # -----------------------
+    # DRAW GAME
+    # -----------------------
 
     screen.fill((30,30,30))
 
@@ -107,7 +142,13 @@ while True:
         label = font.render("P"+p,True,(255,255,255))
         screen.blit(label,(px-10,py-25))
 
-    latency_text = font.render(f"Latency: {latency:.1f} ms",True,(255,255,255))
+
+    latency_text = font.render(
+        f"Latency: {latency:.1f} ms",
+        True,
+        (255,255,255)
+    )
+
     screen.blit(latency_text,(10,10))
 
     pygame.display.update()
