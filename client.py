@@ -31,9 +31,9 @@ def sign_message(payload):
     return json.dumps(packet).encode()
 
 
-# -----------------------
-# SEND JOIN (NOT SIGNED)
-# -----------------------
+# --------------------------
+# JOIN SERVER
+# --------------------------
 
 sock.sendto(json.dumps({"type":"join"}).encode(), (SERVER, PORT))
 
@@ -45,10 +45,9 @@ player_id = msg["player_id"]
 
 print("Connected as player", player_id)
 
-
-# -----------------------
-# START GAME WINDOW
-# -----------------------
+# --------------------------
+# PYGAME INIT
+# --------------------------
 
 pygame.init()
 
@@ -62,10 +61,17 @@ players = {}
 
 x = 300
 y = 300
+
 latency = 0
+packets_sent = 0
+packets_recv = 0
+
+start_time = time.time()
 
 
 while True:
+
+    fps = clock.get_fps()
 
     clock.tick(60)
 
@@ -81,10 +87,9 @@ while True:
     if keys[pygame.K_a]: x -= 5
     if keys[pygame.K_d]: x += 5
 
-
-    # -----------------------
-    # SEND MOVE (SIGNED)
-    # -----------------------
+    # --------------------------
+    # SEND MOVE
+    # --------------------------
 
     sock.sendto(sign_message({
         "type":"move",
@@ -93,16 +98,18 @@ while True:
         "y":y
     }),(SERVER,PORT))
 
+    packets_sent += 1
 
-    # -----------------------
-    # SEND PING (SIGNED)
-    # -----------------------
+    # --------------------------
+    # SEND PING
+    # --------------------------
 
     sock.sendto(sign_message({
         "type":"ping",
         "time":time.time()
     }),(SERVER,PORT))
 
+    packets_sent += 1
 
     sock.setblocking(False)
 
@@ -110,7 +117,9 @@ while True:
 
         while True:
 
-            data,_ = sock.recvfrom(1024)
+            data,_ = sock.recvfrom(4096)
+
+            packets_recv += 1
 
             msg = json.loads(data.decode())
 
@@ -123,10 +132,9 @@ while True:
     except:
         pass
 
-
-    # -----------------------
+    # --------------------------
     # DRAW GAME
-    # -----------------------
+    # --------------------------
 
     screen.fill((30,30,30))
 
@@ -142,6 +150,14 @@ while True:
         label = font.render("P"+p,True,(255,255,255))
         screen.blit(label,(px-10,py-25))
 
+    elapsed = time.time() - start_time
+
+    send_rate = packets_sent / elapsed
+    recv_rate = packets_recv / elapsed
+
+    # --------------------------
+    # DISPLAY METRICS
+    # --------------------------
 
     latency_text = font.render(
         f"Latency: {latency:.1f} ms",
@@ -149,6 +165,27 @@ while True:
         (255,255,255)
     )
 
+    fps_text = font.render(
+        f"FPS: {fps:.1f}",
+        True,
+        (255,255,255)
+    )
+
+    send_text = font.render(
+        f"Send Rate: {send_rate:.0f} pkt/s",
+        True,
+        (255,255,255)
+    )
+
+    recv_text = font.render(
+        f"Recv Rate: {recv_rate:.0f} pkt/s",
+        True,
+        (255,255,255)
+    )
+
     screen.blit(latency_text,(10,10))
+    screen.blit(fps_text,(10,30))
+    screen.blit(send_text,(10,50))
+    screen.blit(recv_text,(10,70))
 
     pygame.display.update()
