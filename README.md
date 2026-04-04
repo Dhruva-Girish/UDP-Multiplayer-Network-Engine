@@ -125,7 +125,7 @@ project/
 ├── README.md     
 ├── Secure_client.py    # Multiplayer game client
 ├── Secure_server.py    # UDP game server
-├── UDP_Muliplayer_Game_Report.pdf
+├── UDP_Multiplayer_Game_Report.pdf
 └── requirements.txt
 ```
 
