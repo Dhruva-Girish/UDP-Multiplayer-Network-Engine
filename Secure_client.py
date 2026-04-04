@@ -31,9 +31,6 @@ def sign_message(payload):
     return json.dumps(packet).encode()
 
 
-# --------------------------
-# JOIN SERVER
-# --------------------------
 
 sock.sendto(json.dumps({"type":"join"}).encode(), (SERVER, PORT))
 
@@ -45,9 +42,6 @@ player_id = msg["player_id"]
 
 print("Connected as player", player_id)
 
-# --------------------------
-# PYGAME INIT
-# --------------------------
 
 pygame.init()
 
@@ -87,9 +81,6 @@ while True:
     if keys[pygame.K_a]: x -= 5
     if keys[pygame.K_d]: x += 5
 
-    # --------------------------
-    # SEND MOVE
-    # --------------------------
 
     sock.sendto(sign_message({
         "type":"move",
@@ -100,9 +91,6 @@ while True:
 
     packets_sent += 1
 
-    # --------------------------
-    # SEND PING
-    # --------------------------
 
     sock.sendto(sign_message({
         "type":"ping",
@@ -132,9 +120,6 @@ while True:
     except:
         pass
 
-    # --------------------------
-    # DRAW GAME
-    # --------------------------
 
     screen.fill((30,30,30))
 
@@ -155,9 +140,6 @@ while True:
     send_rate = packets_sent / elapsed
     recv_rate = packets_recv / elapsed
 
-    # --------------------------
-    # DISPLAY METRICS
-    # --------------------------
 
     latency_text = font.render(
         f"Latency: {latency:.1f} ms",
