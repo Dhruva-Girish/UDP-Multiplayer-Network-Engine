@@ -2,7 +2,6 @@ import socket
 import json
 import hmac
 import hashlib
-import time
 
 HOST = "0.0.0.0"
 PORT = 9999
@@ -23,18 +22,7 @@ colors = [
     [255,0,255]
 ]
 
-
-
-packets_received = 0
-packets_sent = 0
-
-start_time = time.time()
-last_report = time.time()
-
-server_ticks = 0
-server_fps = 0
-
-print("Secure UDP Game Server Started")
+print("Secure Server started")
 
 
 def verify_packet(packet):
@@ -55,18 +43,16 @@ def verify_packet(packet):
 
 while True:
 
-    server_ticks += 1
-
-
-    data, addr = server.recvfrom(2048)
-    packets_received += 1
+    data, addr = server.recvfrom(1024)
 
     try:
         packet = json.loads(data.decode())
     except:
         continue
 
-
+    # ----------------------------
+    # HANDLE JOIN PACKET (no HMAC)
+    # ----------------------------
     if "type" in packet and packet["type"] == "join":
 
         player_counter += 1
@@ -84,12 +70,12 @@ while True:
             "player_id":pid
         }).encode(), addr)
 
-        packets_sent += 1
-
         print("Player joined:", pid)
         continue
 
-
+    # ----------------------------
+    # VERIFY HMAC PACKETS
+    # ----------------------------
     if "data" not in packet:
         continue
 
@@ -99,7 +85,7 @@ while True:
 
     msg = packet["data"]
 
-
+    # movement
     if msg["type"] == "move":
 
         pid = str(msg["player_id"])
@@ -110,7 +96,7 @@ while True:
         players[pid]["x"] = msg["x"]
         players[pid]["y"] = msg["y"]
 
-
+    # ping
     elif msg["type"] == "ping":
 
         server.sendto(json.dumps({
@@ -118,37 +104,13 @@ while True:
             "time":msg["time"]
         }).encode(), addr)
 
-        packets_sent += 1
-
-
+    # ----------------------------
+    # BROADCAST GAME STATE
+    # ----------------------------
     state = {
         "type":"state",
         "players":players
     }
 
     for p in players:
-
         server.sendto(json.dumps(state).encode(), players[p]["addr"])
-        packets_sent += 1
-
-
-    now = time.time()
-
-    if now - last_report >= 5:
-
-        elapsed = now - start_time
-        server_fps = server_ticks / elapsed
-
-        throughput_recv = packets_received / elapsed
-        throughput_send = packets_sent / elapsed
-
-        print("\n--- SERVER PERFORMANCE ---")
-        print("Players:", len(players))
-        print("Packets Received:", packets_received)
-        print("Packets Sent:", packets_sent)
-        print("Recv Throughput:", int(throughput_recv), "pkt/s")
-        print("Send Throughput:", int(throughput_send), "pkt/s")
-        print("Server FPS:", int(server_fps))
-        print("--------------------------\n")
-
-        last_report = now
