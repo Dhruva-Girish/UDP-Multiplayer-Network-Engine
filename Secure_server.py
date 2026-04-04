@@ -23,9 +23,7 @@ colors = [
     [255,0,255]
 ]
 
-# --------------------------
-# PERFORMANCE METRICS
-# --------------------------
+
 
 packets_received = 0
 packets_sent = 0
@@ -59,9 +57,6 @@ while True:
 
     server_ticks += 1
 
-    # --------------------------
-    # RECEIVE PACKET
-    # --------------------------
 
     data, addr = server.recvfrom(2048)
     packets_received += 1
@@ -71,9 +66,6 @@ while True:
     except:
         continue
 
-    # --------------------------
-    # JOIN (NO HMAC)
-    # --------------------------
 
     if "type" in packet and packet["type"] == "join":
 
@@ -97,9 +89,6 @@ while True:
         print("Player joined:", pid)
         continue
 
-    # --------------------------
-    # VERIFY HMAC
-    # --------------------------
 
     if "data" not in packet:
         continue
@@ -110,9 +99,6 @@ while True:
 
     msg = packet["data"]
 
-    # --------------------------
-    # MOVE
-    # --------------------------
 
     if msg["type"] == "move":
 
@@ -124,9 +110,6 @@ while True:
         players[pid]["x"] = msg["x"]
         players[pid]["y"] = msg["y"]
 
-    # --------------------------
-    # PING
-    # --------------------------
 
     elif msg["type"] == "ping":
 
@@ -137,9 +120,6 @@ while True:
 
         packets_sent += 1
 
-    # --------------------------
-    # BROADCAST STATE
-    # --------------------------
 
     state = {
         "type":"state",
@@ -151,9 +131,6 @@ while True:
         server.sendto(json.dumps(state).encode(), players[p]["addr"])
         packets_sent += 1
 
-    # --------------------------
-    # PERFORMANCE REPORT
-    # --------------------------
 
     now = time.time()
 
